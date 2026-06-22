@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import os
-import streamlit.components.v1 as components
 from datetime import datetime, date, timedelta
 from fpdf import FPDF
 
@@ -152,7 +151,9 @@ def save_calibration_log(header_data, readings_data):
     pdf.cell(135, 5, f'Operator Signature (ID: {header_data["operator_id"]})', 0, 0, 'C')
     pdf.cell(135, 5, 'QA Lead / Supervisor Review', 0, 1, 'C')
     
+    # Return the filename so the main app can access it
     pdf.output(report_filename)
+    return report_filename
 
 
 # --- 🧪 DEVELOPMENT CHEAT MENU ---
@@ -372,7 +373,11 @@ if connection:
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
             
-            save_calibration_log(header_data, st.session_state.current_readings)
+            # Capture the returned filename
+            generated_pdf = save_calibration_log(header_data, st.session_state.current_readings)
+            
+            # Save the filename to session state so it survives the rerun
+            st.session_state.ready_pdf = generated_pdf
             
             st.session_state.last_location = location
             
@@ -380,17 +385,19 @@ if connection:
             del st.session_state['unlocked_standards']
             del st.session_state['current_readings']
             
-            st.success("Log successfully written! CSV appended and unique PDF generated.")
             st.rerun()
 
-
-with open(report_filename, "rb") as pdf_file:
-    st.download_button(
-        label="📄 Download Calibration PDF",
-        data=pdf_file,
-        file_name=report_filename,
-        mime="application/pdf"
-    )
-
-
- 
+        # --- PDF DOWNLOAD HANDLER ---
+        if 'ready_pdf' in st.session_state:
+            st.success("✅ Log successfully written! CSV appended and unique PDF generated.")
+            
+            try:
+                with open(st.session_state.ready_pdf, "rb") as pdf_file:
+                    st.download_button(
+                        label="📄 Download Calibration PDF",
+                        data=pdf_file,
+                        file_name=st.session_state.ready_pdf,
+                        mime="application/pdf"
+                    )
+            except FileNotFoundError:
+                st.error("Error: The PDF file could not be found for download.")
