@@ -211,11 +211,11 @@ with col2:
     shift = st.selectbox("Shift", options=["Day", "Night"], index=default_index)
     
 with col3: 
-    location = st.text_input("Location", value=st.session_state.last_location, placeholder="e.g., Line 1")
+    location = st.text_input("Location", value=st.session_state.last_location, placeholder="e.g., Line 1", autocomplete="off")
     if location != "" and not location.strip(): st.error("Location cannot be blank spaces.")
     
 with col4: 
-    operator_sig = st.text_input("Operator ID", placeholder="e.g., 60012345", max_chars=8)
+    operator_sig = st.text_input("Operator ID", placeholder="e.g., 60012345", max_chars=8, autocomplete="off")
     op_id = operator_sig.strip()
     if op_id:
         if not (len(op_id) == 8 and op_id.startswith("600") and op_id.isdigit()):
@@ -264,7 +264,7 @@ if connection:
                     lock_col1.markdown(f"**{row['gauge_type']}**")
                     lock_col1.caption("🔒 *Gauge Information Hidden*")
                     
-                    user_input = lock_col2.text_input("Last 2 Digits of Gauge ID", max_chars=2, key=f"in_g_{gid}")
+                    user_input = lock_col2.text_input("Last 2 Digits of Gauge ID", max_chars=2, key=f"in_g_{gid}", autocomplete="off")
                     lock_col3.write("") 
                     btn_clicked = lock_col3.button("Verify Gauge", key=f"btn_g_{gid}")
                     
@@ -293,7 +293,7 @@ if connection:
                             vis_ok = st.checkbox("Visual OK", value=True, key=f"vis_{gid}")
                             st.session_state.current_readings[gid]["visual_ok"] = vis_ok
                         with act_col3:
-                            com = st.text_input("Comments", placeholder="Optional remarks...", label_visibility="collapsed", key=f"com_{gid}")
+                            com = st.text_input("Comments", placeholder="Optional remarks...", label_visibility="collapsed", key=f"com_{gid}", autocomplete="off")
                             st.session_state.current_readings[gid]["comments"] = com
                     
                     else:
@@ -308,7 +308,7 @@ if connection:
                             s_lock1.markdown("**Standard Required**")
                             s_lock1.caption("🔒 *Standard Information Hidden*")
                             
-                            s_input = s_lock2.text_input("Last 2 Digits of Standard ID", max_chars=2, key=f"in_s_{gid}_{sid}")
+                            s_input = s_lock2.text_input("Last 2 Digits of Standard ID", max_chars=2, key=f"in_s_{gid}_{sid}", autocomplete="off")
                             s_lock3.write("")
                             s_btn_clicked = s_lock3.button("Verify Standard", key=f"btn_s_{gid}_{sid}")
                             
@@ -329,7 +329,7 @@ if connection:
                             act_col1, act_col2, act_col3 = st.columns([2, 1, 2])
                             
                             with act_col1:
-                                raw_read = st.text_input("Standard Reading", placeholder="Type reading here", key=f"raw_read_{gid}")
+                                raw_read = st.text_input("Standard Reading", placeholder="Type reading here", key=f"raw_read_{gid}", autocomplete="off")
                                 
                                 if raw_read:
                                     if "depth mic" in str(row['gauge_type']).lower():
@@ -351,7 +351,7 @@ if connection:
                                 vis_ok = st.checkbox("Visual OK", value=True, key=f"vis_{gid}")
                                 st.session_state.current_readings[gid]["visual_ok"] = vis_ok
                             with act_col3:
-                                com = st.text_input("Comments", placeholder="Optional remarks...", label_visibility="collapsed", key=f"com_{gid}")
+                                com = st.text_input("Comments", placeholder="Optional remarks...", label_visibility="collapsed", key=f"com_{gid}", autocomplete="off")
                                 st.session_state.current_readings[gid]["comments"] = com
 
         st.divider()
