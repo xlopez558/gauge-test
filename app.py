@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
+import pytz
 from datetime import datetime, date, timedelta
 from fpdf import FPDF
 
@@ -33,6 +34,9 @@ if 'last_location' not in st.session_state: st.session_state.last_location = ""
 DB_FILE = "gauges.csv"
 LOG_FILE = "shift_log.csv" 
 
+# Set timezone explicitly to Central Time for accurate logging
+tz = pytz.timezone('America/Chicago')
+
 def load_gauge_data():
     if os.path.exists(DB_FILE):
         return pd.read_csv(DB_FILE, dtype={'gauge_id': str, 'standard_id': str})
@@ -44,7 +48,8 @@ df_gauges = load_gauge_data()
 
 def is_valid_date(date_str):
     if pd.isna(date_str) or str(date_str).strip().upper() == "N/A": return True
-    try: return datetime.strptime(str(date_str), "%Y-%m-%d").date() >= date.today()
+    # Compare against Central Time current date
+    try: return datetime.strptime(str(date_str), "%Y-%m-%d").date() >= datetime.now(tz).date()
     except ValueError: return False
 
 
@@ -189,7 +194,9 @@ with st.sidebar:
 # --- GLOBAL HEADER ---
 st.markdown("### 📋 Shift Information")
 
-now = datetime.now()
+# Pulling current Central Time
+now = datetime.now(tz)
+
 if now.hour < 6:
     production_date = (now.date() - timedelta(days=1)).strftime("%Y-%m-%d")
     auto_shift = "Night"
@@ -373,7 +380,8 @@ if connection:
                 "shift": shift,
                 "location": location,
                 "operator_id": op_id,
-                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                # Explicitly pass the Central Time object here
+                "timestamp": datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
             }
             
             # Capture the returned filename
