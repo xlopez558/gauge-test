@@ -21,14 +21,10 @@ st.markdown("""
 
 st.title("🏭 Tenaris Quality Lab - Gauge Kiosk")
 
-# --- SESSION STATE INITIALIZATION & STICKY HEADERS ---
+# --- SESSION STATE INITIALIZATION ---
 if 'unlocked_gauges' not in st.session_state: st.session_state.unlocked_gauges = {}
 if 'unlocked_standards' not in st.session_state: st.session_state.unlocked_standards = {}
 if 'current_readings' not in st.session_state: st.session_state.current_readings = {}
-
-# Sticky memory for Location ONLY
-if 'last_location' not in st.session_state: st.session_state.last_location = ""
-
 
 # --- DATABASE CONNECTIONS ---
 DB_FILE = "gauges.csv"
@@ -168,7 +164,7 @@ def save_calibration_log(header_data, readings_data):
 with st.sidebar:
     st.markdown("### 🛠️ Developer Tools")
     if st.button("⚡ Quick-Fill Mock Data", type="primary"):
-        st.session_state.last_location = "TEST-LINE-1"
+        st.session_state.loc_input = "TEST-LINE-1"
         for index, row in df_gauges.iterrows():
             gid = str(row['gauge_id']).strip()
             sid = str(row['standard_id']).strip()
@@ -218,11 +214,11 @@ with col2:
     shift = st.selectbox("Shift", options=["Day", "Night"], index=default_index)
     
 with col3: 
-    location = st.text_input("Location", value=st.session_state.last_location, placeholder="e.g., Line 1", autocomplete="off")
+    location = st.text_input("Location", placeholder="e.g., Line 1", autocomplete="off", key="loc_input")
     if location != "" and not location.strip(): st.error("Location cannot be blank spaces.")
     
 with col4: 
-    operator_sig = st.text_input("Operator ID", placeholder="e.g., 60012345", max_chars=8, autocomplete="off")
+    operator_sig = st.text_input("Operator ID", placeholder="e.g., 60012345", max_chars=8, autocomplete="off", key="op_input")
     op_id = operator_sig.strip()
     if op_id:
         if not (len(op_id) == 8 and op_id.startswith("600") and op_id.isdigit()):
@@ -231,7 +227,7 @@ st.divider()
 
 
 # --- CONNECTION ROUTING & DYNAMIC UI ---
-connection = st.selectbox("Select a connection...", ["", "TXP/BTC/TPN", "Wedge 441/461", "Wedge 451"])
+connection = st.selectbox("Select a connection...", ["", "TXP/BTC/TPN", "Wedge 441/461", "Wedge 451"], key="conn_input")
 
 if connection:
     st.info(f"Active Job: {connection}")
@@ -390,25 +386,39 @@ if connection:
             # Save the filename to session state so it survives the rerun
             st.session_state.ready_pdf = generated_pdf
             
-            st.session_state.last_location = location
-            
             del st.session_state['unlocked_gauges']
             del st.session_state['unlocked_standards']
             del st.session_state['current_readings']
             
             st.rerun()
 
-        # --- PDF DOWNLOAD HANDLER ---
+        # --- PDF DOWNLOAD & RESET HANDLER ---
         if 'ready_pdf' in st.session_state:
             st.success("✅ Log successfully written! CSV appended and unique PDF generated.")
             
-            try:
-                with open(st.session_state.ready_pdf, "rb") as pdf_file:
-                    st.download_button(
-                        label="📄 Download Calibration PDF",
-                        data=pdf_file,
-                        file_name=st.session_state.ready_pdf,
-                        mime="application/pdf"
-                    )
-            except FileNotFoundError:
-                st.error("Error: The PDF file could not be found for download.")
+            col_a, col_b = st.columns(2)
+            
+            with col_a:
+                try:
+                    with open(st.session_state.ready_pdf, "rb") as pdf_file:
+                        st.download_button(
+                            label="📄 Download Calibration PDF",
+                            data=pdf_file,
+                            file_name=st.session_state.ready_pdf,
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+                except FileNotFoundError:
+                    st.error("Error: The PDF file could not be found for download.")
+            
+            with col_b:
+                if st.button("🔄 Finish & Reset App for Next Operator", use_container_width=True):
+                    # Delete the PDF flag
+                    del st.session_state['ready_pdf']
+                    
+                    # Force clear the header inputs
+                    for key in ['loc_input', 'op_input', 'conn_input']:
+                        if key in st.session_state:
+                            del st.session_state[key]
+                            
+                    st.rerun()
