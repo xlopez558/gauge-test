@@ -204,8 +204,9 @@ with col1:
     log_date = production_date
     
 with col2: 
-    st.text_input("Shift", value=auto_shift, disabled=True)
-    shift = auto_shift
+    # Sets the dropdown default based on the auto-calculated time
+    default_index = 0 if auto_shift == "Day" else 1
+    shift = st.selectbox("Shift", options=["Day", "Night"], index=default_index)
     
 with col3: 
     location = st.text_input("Location", value=st.session_state.last_location, placeholder="e.g., Line 1")
