@@ -12,6 +12,9 @@ st.markdown("""
     input[type=number]::-webkit-inner-spin-button, 
     input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
+    
+    /* Hides the default Streamlit "Press Enter to apply" text */
+    div[data-testid="InputInstructions"] { display: none !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -204,7 +207,6 @@ with col1:
     log_date = production_date
     
 with col2: 
-    # Sets the dropdown default based on the auto-calculated time
     default_index = 0 if auto_shift == "Day" else 1
     shift = st.selectbox("Shift", options=["Day", "Night"], index=default_index)
     
@@ -216,8 +218,8 @@ with col4:
     operator_sig = st.text_input("Operator ID", placeholder="e.g., 60012345", max_chars=8)
     op_id = operator_sig.strip()
     if op_id:
-        if len(op_id) == 8 and op_id.startswith("600") and op_id.isdigit(): st.success("Valid ID Format ✅")
-        else: st.error("⚠️ Invalid ID: Must be exactly 8 digits starting with '600'")
+        if not (len(op_id) == 8 and op_id.startswith("600") and op_id.isdigit()):
+            st.error("⚠️ Invalid ID: Must be exactly 8 digits starting with '600'")
 st.divider()
 
 
