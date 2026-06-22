@@ -383,21 +383,14 @@ if connection:
             st.success("Log successfully written! CSV appended and unique PDF generated.")
             st.rerun()
 
-# --- SMART FOCUS & SCROLL JS INJECTION ---
-components.html(
-    """
-    <script>
-        setTimeout(function() {
-            const inputs = window.parent.document.querySelectorAll('input[type="text"]');
-            for (let i = 0; i < inputs.length; i++) {
-                if (!inputs[i].value && inputs[i].offsetParent !== null) {
-                    inputs[i].focus();
-                    inputs[i].scrollIntoView({behavior: "smooth", block: "center"});
-                    break; 
-                }
-            }
-        }, 500); 
-    </script>
-    """,
-    height=0,
-)
+
+with open(report_filename, "rb") as pdf_file:
+    st.download_button(
+        label="📄 Download Calibration PDF",
+        data=pdf_file,
+        file_name=report_filename,
+        mime="application/pdf"
+    )
+
+
+ 
